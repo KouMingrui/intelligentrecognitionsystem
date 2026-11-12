@@ -59,8 +59,14 @@ for seconds in BUDGETS:
         f, miss = extract_features(x)
         feat_list.append(f)
         miss_list.append(miss.reshape(-1, 1))
+        #加6个基础特征名
         feat_names += [f"{ch}_{s}" for s in ["mean", "std", "min", "max", "rms", "slope"]]
+    
+    #循环结束后统一加所有的missing特征名
+    for ch in CHANNELS:
         feat_names += [f"{ch}_missing"]
+
+    # 拼接前84列是特征后14列是 missing
     X = np.hstack(feat_list + miss_list)
     print("特征矩阵:", X.shape)
 
