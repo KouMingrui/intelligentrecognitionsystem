@@ -70,21 +70,19 @@ python prepare.py
 ├── train_b0.py              # 方案B0训练脚本（基础统计特征）
 ├── train_b1.py              # 方案B1训练脚本（分段统计+差分特征）
 ├── train_b2.py              # 方案B2训练脚本（分段统计特征，消融差分）
+├── train_b3.py              # 方案B3训练脚本（B1特征+物理交叉特征）
+├── train_b4.py              # 方案B4训练脚本（B0特征+物理交叉特征）
 ├── evaluate.py              # 模型性能评估脚本
 ├── alarm_evaluate.py        # 预测与告警生成脚本
 ├── evaluate_robustness.py   # 模型鲁棒性评估脚本
 ├── replay.py                # 可视化回放脚本
 │
 ├── models/                  # 模型存储目录
-│   ├── b0_10s/              # B0方案-10秒观测模型
-│   ├── b0_30s/
-│   ├── b0_60s/
-│   ├── b1_10s/              # B1方案-10秒观测模型
-│   ├── b1_30s/
-│   ├── b1_60s/
-│   ├── b2_10s/              # B2方案-10秒观测模型
-│   ├── b2_30s/
-│   └── b2_60s/
+│   ├── b0_10s/ ~ b0_60s/    # B0方案模型
+│   ├── b1_10s/ ~ b1_60s/    # B1方案模型
+│   ├── b2_10s/ ~ b2_60s/    # B2方案模型
+│   ├── b3_10s/ ~ b3_60s/    # B3方案模型
+│   └── b4_10s/ ~ b4_60s/    # B4方案模型
 │
 ├── figures/                                # 图表输出目录
 ├── condition+monitoring+of+hydraulic+systems/  # 原始数据目录
@@ -118,6 +116,20 @@ python prepare.py
 
 在B0基础上仅增加 **3个分段均值**（去掉差分特征）
 
+### 方案B3：B1特征+物理交叉特征
+
+在B1基础上增加 **2个物理交叉特征**:
+
+- 能流比 (energy_per_flow) = EPS1均值 / (FS1均值 + 1e-5)
+- 温差 (temp_diff) = TS1均值 - TS4均值
+
+### 方案B4：B0特征+物理交叉特征
+
+在B0基础上增加 **2个物理交叉特征**:
+
+- 能流比 (energy_per_flow) = EPS1均值 / (FS1均值 + 1e-5)
+- 温差 (temp_diff) = TS1均值 - TS4均值
+
 ## 快速开始
 
 ### 1. 环境配置
@@ -137,14 +149,20 @@ python prepare.py
 ### 3. 模型训练
 
 ```bash
-# 方案B0训练
+# 方案B0训练（基础统计特征）
 python train_b0.py
 
-# 方案B1训练
+# 方案B1训练（分段统计+差分特征）
 python train_b1.py
 
-# 方案B2训练
+# 方案B2训练（分段统计特征，消融差分）
 python train_b2.py
+
+# 方案B3训练（B1特征+物理交叉特征）
+python train_b3.py
+
+# 方案B4训练（B0特征+物理交叉特征）
+python train_b4.py
 ```
 
 ### 4. 生成预测与告警
@@ -158,6 +176,12 @@ python alarm_evaluate.py --model b1
 
 # 生成B2模型的预测和告警
 python alarm_evaluate.py --model b2
+
+# 生成B3模型的预测和告警
+python alarm_evaluate.py --model b3
+
+# 生成B4模型的预测和告警
+python alarm_evaluate.py --model b4
 ```
 
 ### 5. 模型评估
@@ -208,6 +232,14 @@ python replay.py --cycle 100 --model b1 --speed normal
 | `metrics.json` | 完整评测指标 |
 | `robustness_summary.csv` | 鲁棒性测试结果 |
 
+## 依赖环境
+
+- Python >= 3.10
+- NumPy >= 1.26
+- Pandas >= 2.0
+- scikit-learn >= 1.4
+- joblib >= 1.4
+- matplotlib >= 3.8
 
 ## 参考
 

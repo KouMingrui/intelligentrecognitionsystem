@@ -96,10 +96,10 @@ def evaluate_model(model_type):
 
 if __name__ == "__main__":
     final_metrics = {}
-    for mt in ["b0", "b1", "b2"]:
+    for mt in ["b0", "b1", "b2", "b3", "b4"]:
         if os.path.exists(f"predictions_{mt}.csv"):
             final_metrics[mt] = evaluate_model(mt)
     
     with open("metrics.json", "w") as f:
         json.dump(final_metrics, f, indent=4)
-    print("已生成完整的 metrics.json，包含 B0/B1/B2 评测与稳定性分层！")
+    print("已生成完整的 metrics.json，包含 B0/B1/B2/B3/B4 评测与稳定性分层！")

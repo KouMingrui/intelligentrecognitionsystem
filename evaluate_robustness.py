@@ -51,6 +51,14 @@ def extract_b2(x):
         m1 = m2 = m3 = np.zeros(x.shape[0])
     return np.column_stack([f_b0, m1, m2, m3]), miss
 
+def extract_b3(x):
+    # B3: B1特征 + 物理交叉特征（物理交叉特征在外部计算）
+    return extract_b1(x)
+
+def extract_b4(x):
+    # B4: B0特征 + 物理交叉特征（物理交叉特征在外部计算）
+    return extract_b0(x)
+
 #主评测逻辑
 print("读入原始数据...")
 raw = {ch: np.loadtxt(f"{DATA_DIR}/{ch}.txt") for ch in CHANNELS}
@@ -65,7 +73,7 @@ train_stds = {ch: raw[ch][train_idx].std() for ch in CHANNELS}
 
 results = []
 conditions = ["clean", "noise_0.05", "noise_0.10", "mask_FS1", "mask_FS1_FS2"]
-model_types = [("b0", extract_b0), ("b1", extract_b1), ("b2", extract_b2)]
+model_types = [("b0", extract_b0), ("b1", extract_b1), ("b2", extract_b2), ("b3", extract_b3), ("b4", extract_b4)]
 
 np.random.seed(SEED)
 
@@ -88,7 +96,7 @@ for cond in conditions:
             x = np.full_like(x, np.nan)
         raw_perturbed[ch] = x
 
-    #对三种模型进行提取预测评测
+    #对五种模型进行提取预测评测
     for model_type, extract_fn in model_types:
         for seconds in BUDGETS:
             out_dir = f"models/{model_type}_{seconds}s"
@@ -103,6 +111,16 @@ for cond in conditions:
                 feat_list.append(f)
                 miss_list.append(miss.reshape(-1, 1))
             X = np.hstack(feat_list + miss_list)
+            
+            # B3/B4 需要添加物理交叉特征
+            if model_type in ["b3", "b4"]:
+                eps1_mean = raw_perturbed["EPS1"][:, :100*seconds].mean(axis=1)
+                fs1_mean = raw_perturbed["FS1"][:, :10*seconds].mean(axis=1)
+                ts1_mean = raw_perturbed["TS1"][:, :1*seconds].mean(axis=1)
+                ts4_mean = raw_perturbed["TS4"][:, :1*seconds].mean(axis=1)
+                energy_per_flow = eps1_mean / (fs1_mean + 1e-5)
+                temp_diff = ts1_mean - ts4_mean
+                X = np.hstack([X, energy_per_flow.reshape(-1,1), temp_diff.reshape(-1,1)])
             
             #补偿
             X_imp = X.copy()

@@ -43,7 +43,15 @@ def extract_b2(x):
         m1=m2=m3=np.zeros(x.shape[0])
     return np.column_stack([f_b0,m1,m2,m3]), miss
 
-EXTRACT_FNS = {"b0": extract_b0, "b1": extract_b1, "b2": extract_b2}
+def extract_b3(x):
+    # B3: B1特征 + 物理交叉特征（物理交叉特征在外部计算）
+    return extract_b1(x)
+
+def extract_b4(x):
+    # B4: B0特征 + 物理交叉特征（物理交叉特征在外部计算）
+    return extract_b0(x)
+
+EXTRACT_FNS = {"b0": extract_b0, "b1": extract_b1, "b2": extract_b2, "b3": extract_b3, "b4": extract_b4}
 
 def run_alarm_eval(model_type):
     print(f"评估模型: {model_type.upper()}")
@@ -66,6 +74,17 @@ def run_alarm_eval(model_type):
             feat_list.append(f)
             miss_list.append(m.reshape(-1, 1))
         X = np.hstack(feat_list + miss_list)
+        
+        # B3/B4 需要添加物理交叉特征
+        if model_type in ["b3", "b4"]:
+            eps1_mean = raw["EPS1"][:, :100*seconds].mean(axis=1)
+            fs1_mean = raw["FS1"][:, :10*seconds].mean(axis=1)
+            ts1_mean = raw["TS1"][:, :1*seconds].mean(axis=1)
+            ts4_mean = raw["TS4"][:, :1*seconds].mean(axis=1)
+            energy_per_flow = eps1_mean / (fs1_mean + 1e-5)
+            temp_diff = ts1_mean - ts4_mean
+            X = np.hstack([X, energy_per_flow.reshape(-1,1), temp_diff.reshape(-1,1)])
+        
         X_imp = X.copy()
         inds = np.where(np.isnan(X_imp))
         X_imp[inds] = med[inds[1]]
@@ -120,6 +139,6 @@ def run_alarm_eval(model_type):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, default="b0", choices=["b0", "b1", "b2"])
+    parser.add_argument("--model", type=str, default="b0", choices=["b0", "b1", "b2", "b3", "b4"])
     args = parser.parse_args()
     run_alarm_eval(args.model)

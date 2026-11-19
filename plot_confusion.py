@@ -54,6 +54,14 @@ def extract_b2(x):
         m1 = m2 = m3 = np.zeros(x.shape[0])
     return np.column_stack([f_b0, m1, m2, m3]), miss
 
+def extract_b3(x):
+    # B3: B1特征 + 物理交叉特征（物理交叉特征在外部计算）
+    return extract_b1(x)
+
+def extract_b4(x):
+    # B4: B0特征 + 物理交叉特征（物理交叉特征在外部计算）
+    return extract_b0(x)
+
 #读数据
 print("读入原始数据...")
 raw = {ch: np.loadtxt(f"{DATA_DIR}/{ch}.txt") for ch in CHANNELS}
@@ -63,11 +71,13 @@ manifest = pd.read_csv("manifest.csv")
 idx = {s: manifest.index[manifest["split"] == s].values for s in ["val", "test"]}
 os.makedirs(FIG_DIR, exist_ok=True)
 
-#核心循环遍历B0B1B2
+#核心循环遍历B0B1B2B3B4
 model_configs = [
     ("b0", extract_b0),
     ("b1", extract_b1),
-    ("b2", extract_b2)
+    ("b2", extract_b2),
+    ("b3", extract_b3),
+    ("b4", extract_b4)
 ]
 
 for model_type, extract_fn in model_configs:
@@ -87,6 +97,16 @@ for model_type, extract_fn in model_configs:
             feat_list.append(f)
             miss_list.append(miss.reshape(-1, 1))
         X = np.hstack(feat_list + miss_list)
+        
+        # B3/B4 需要添加物理交叉特征
+        if model_type in ["b3", "b4"]:
+            eps1_mean = raw["EPS1"][:, :100*seconds].mean(axis=1)
+            fs1_mean = raw["FS1"][:, :10*seconds].mean(axis=1)
+            ts1_mean = raw["TS1"][:, :1*seconds].mean(axis=1)
+            ts4_mean = raw["TS4"][:, :1*seconds].mean(axis=1)
+            energy_per_flow = eps1_mean / (fs1_mean + 1e-5)
+            temp_diff = ts1_mean - ts4_mean
+            X = np.hstack([X, energy_per_flow.reshape(-1,1), temp_diff.reshape(-1,1)])
 
         X_imp = X.copy()
         inds = np.where(np.isnan(X_imp))
@@ -140,4 +160,4 @@ for model_type, extract_fn in model_configs:
         plt.close()
         print(f"已保存 {path}")
 
-print("\n全部完成，12张图已存放在 figures/ 目录下")
+print("\n全部完成，20张图已存放在 figures/ 目录下")

@@ -67,5 +67,51 @@
             "time_60s": 64,
             "missed": 29
         }
+    },
+    "b3": {
+        "budget_10s": {
+            "mean_macro_f1": 0.9061,
+            "strict_joint_accuracy": 0.7692
+        },
+        "budget_30s": {
+            "mean_macro_f1": 0.8939,
+            "strict_joint_accuracy": 0.6995
+        },
+        "budget_60s": {
+            "mean_macro_f1": 0.8344,
+            "strict_joint_accuracy": 0.3256,
+            "stable_flag_0_joint_acc": 0.5485,
+            "stable_flag_1_joint_acc": 0.0692
+        },
+        "anomaly_localization_f1": 0.873,
+        "alarm_metrics": {
+            "f1": 0.9597,
+            "time_30s": 961,
+            "time_60s": 50,
+            "missed": 37
+        }
+    },
+    "b4": {
+        "budget_10s": {
+            "mean_macro_f1": 0.87,
+            "strict_joint_accuracy": 0.6852
+        },
+        "budget_30s": {
+            "mean_macro_f1": 0.8162,
+            "strict_joint_accuracy": 0.2898
+        },
+        "budget_60s": {
+            "mean_macro_f1": 0.8113,
+            "strict_joint_accuracy": 0.2719,
+            "stable_flag_0_joint_acc": 0.4548,
+            "stable_flag_1_joint_acc": 0.0615
+        },
+        "anomaly_localization_f1": 0.8621,
+        "alarm_metrics": {
+            "f1": 0.8681,
+            "time_30s": 898,
+            "time_60s": 106,
+            "missed": 44
+        }
     }
 }

@@ -29,8 +29,29 @@ def extract_b1(x):
         m1=m2=m3=d12=d23=np.zeros(x.shape[0])
     return np.column_stack([mean,std,mn,mx,rms,slope,m1,m2,m3,d12,d23]), near_const.astype(int)
 
+def extract_b0(x):
+    n = x.shape[1]
+    mean, std, mn, mx = x.mean(1), x.std(1), x.min(1), x.max(1)
+    rms = np.sqrt((x**2).mean(1))
+    t = np.arange(n, dtype=float); t -= t.mean()
+    slope = (x*t).sum(1)/(t**2).sum()
+    near_const = std < 1e-8; slope[near_const] = np.nan
+    return np.column_stack([mean,std,mn,mx,rms,slope]), near_const.astype(int)
+
+def extract_b3(x):
+    # B3: B1特征 + 物理交叉特征（物理交叉特征在外部计算）
+    return extract_b1(x)
+
+def extract_b4(x):
+    # B4: B0特征 + 物理交叉特征（物理交叉特征在外部计算）
+    return extract_b0(x)
+
 def run_replay(cycle_id, model_type, speed):
     print(f"\n▶ 开始回放 周期 {cycle_id} | 模型: {model_type.upper()} | 速度: {speed}")
+    
+    # 选择特征提取函数
+    extract_fn_map = {"b0": extract_b0, "b1": extract_b1, "b2": extract_b1, "b3": extract_b3, "b4": extract_b4}
+    extract_fn = extract_fn_map.get(model_type, extract_b1)
     
     #准备绘图数据
     fig, axes = plt.subplots(2, 2, figsize=(10, 6))
@@ -84,12 +105,23 @@ def run_replay(cycle_id, model_type, speed):
         missing_sensors = []
         for ch, fs in CHANNELS.items():
             raw = np.loadtxt(f"{DATA_DIR}/{ch}.txt")[cycle_id:cycle_id+1, :fs*sec]
-            f, m = extract_b1(raw)
+            f, m = extract_fn(raw)
             feat_list.append(f)
             miss_list.append(m.reshape(-1, 1))
             if m[0] == 1: missing_sensors.append(ch)
             
         X = np.hstack(feat_list + miss_list)
+        
+        # B3/B4 需要添加物理交叉特征
+        if model_type in ["b3", "b4"]:
+            eps1_mean = np.loadtxt(f"{DATA_DIR}/EPS1.txt")[cycle_id:cycle_id+1, :100*sec].mean(axis=1)
+            fs1_mean = np.loadtxt(f"{DATA_DIR}/FS1.txt")[cycle_id:cycle_id+1, :10*sec].mean(axis=1)
+            ts1_mean = np.loadtxt(f"{DATA_DIR}/TS1.txt")[cycle_id:cycle_id+1, :1*sec].mean(axis=1)
+            ts4_mean = np.loadtxt(f"{DATA_DIR}/TS4.txt")[cycle_id:cycle_id+1, :1*sec].mean(axis=1)
+            energy_per_flow = eps1_mean / (fs1_mean + 1e-5)
+            temp_diff = ts1_mean - ts4_mean
+            X = np.hstack([X, energy_per_flow.reshape(-1,1), temp_diff.reshape(-1,1)])
+        
         X = np.where(np.isnan(X), med, X)
         
         if missing_sensors:
@@ -124,7 +156,7 @@ def run_replay(cycle_id, model_type, speed):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--cycle", type=int, default=100)
-    parser.add_argument("--model", type=str, default="b1", choices=["b0", "b1", "b2"])
+    parser.add_argument("--model", type=str, default="b1", choices=["b0", "b1", "b2", "b3", "b4"])
     parser.add_argument("--speed", type=str, default="normal", choices=["normal", "fast"])
     args = parser.parse_args()
     run_replay(args.cycle, args.model, args.speed)

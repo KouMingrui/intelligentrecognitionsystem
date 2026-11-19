@@ -9,9 +9,9 @@ df = pd.read_csv("robustness_summary.csv")
 
 conditions = ["clean", "noise_0.05", "noise_0.10", "mask_FS1", "mask_FS1_FS2"]
 targets = ["cooler", "valve", "pump", "accumulator"]
-models = ["B0", "B1", "B2"]
-colors = {"B0": "gray", "B1": "blue", "B2": "orange"}
-markers = {"B0": "o", "B1": "s", "B2": "^"}
+models = ["B0", "B1", "B2", "B3", "B4"]
+colors = {"B0": "gray", "B1": "blue", "B2": "orange", "B3": "green", "B4": "red"}
+markers = {"B0": "o", "B1": "s", "B2": "^", "B3": "D", "B4": "p"}
 
 #60秒主结果五种测试条件对比
 df_60 = df[df["seconds"] == 60]
