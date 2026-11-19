@@ -10,7 +10,7 @@ profile = np.loadtxt(PROFILE)
 labels = profile[:, :4].astype(int)
 stable = profile[:, 4].astype(int)
 
-# 构建144种四元组 安装状态组合分组并提取样本
+# 构建144种四元组 按照状态组合分组并提取样本
 groups = sorted(set(tuple(row) for row in labels))
 healthy = (100, 100, 0, 130)
 groups.remove(healthy)

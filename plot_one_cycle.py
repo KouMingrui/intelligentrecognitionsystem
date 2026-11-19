@@ -6,11 +6,11 @@ DATA_DIR = "condition+monitoring+of+hydraulic+systems"
 
 #格式：周期ID(报错的部件, 真实标签, 预测标签)
 error_cases = {
-    222: ("pump", 1, 0),
-    321: ("valve", 80, 100),
-    681: ("accumulator", 115, 130),
-    727: ("cooler", 3, 20),
-    1067: ("pump", 2, 1)
+    225: ("valve", 80, 90),
+    314: ("accumulator", 130, 115),
+    629: ("pump", 2, 1),
+    1465: ("cooler", 100, 20),
+    1546: ("valve", 100, 90)
 }
 
 #针对不同部件选择最能解释错误的通道
@@ -41,7 +41,7 @@ for cid, (comp, true_val, pred_val) in error_cases.items():
         t = np.arange(len(raw)) / fs
         
         axes[i].plot(t, raw, color=['tab:blue', 'tab:orange', 'tab:green'][i], linewidth=1.5)
-        axes[i].set_ylabel(f"{ch} (采样率 {fs}Hz)")
+        axes[i].set_ylabel(f"{ch} (sampling rate {fs}Hz)")
         axes[i].grid(alpha=0.3)
         
         axes[i].set_facecolor('#f8f9fa')

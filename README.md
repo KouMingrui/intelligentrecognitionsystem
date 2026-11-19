@@ -76,6 +76,11 @@ python prepare.py
 ├── alarm_evaluate.py        # 预测与告警生成脚本
 ├── evaluate_robustness.py   # 模型鲁棒性评估脚本
 ├── replay.py                # 可视化回放脚本
+├── benchmark.py             # 性能基准测试脚本
+├── plot_confusion.py        # 混淆矩阵可视化脚本
+├── plot_one_cycle.py        # 单周期错误案例分析脚本
+├── plot_robustness.py       # 鲁棒性测试结果可视化脚本
+├── extract_all_errors.py    # 提取所有错误预测案例脚本
 │
 ├── models/                  # 模型存储目录
 │   ├── b0_10s/ ~ b0_60s/    # B0方案模型
@@ -192,13 +197,28 @@ python evaluate.py
 
 # 测试模型鲁棒性
 python evaluate_robustness.py
+
+# 性能基准测试（耗时、内存、模型大小）
+python benchmark.py
 ```
 
-### 6. 可视化回放
+### 6. 可视化
 
 ```bash
 # 回放指定周期的预测过程
 python replay.py --cycle 100 --model b1 --speed normal
+
+# 生成混淆矩阵可视化（20张图）
+python plot_confusion.py
+
+# 绘制鲁棒性测试结果对比图
+python plot_robustness.py
+
+# 分析单周期错误案例
+python plot_one_cycle.py
+
+# 提取所有错误预测案例
+python extract_all_errors.py
 ```
 
 ## 评测指标
@@ -208,11 +228,16 @@ python replay.py --cycle 100 --model b1 --speed normal
 - **Macro-F1**: 所有类别的F1分数平均值
 - **Recall per Class**: 每个健康等级的召回率
 - **Strict Joint Accuracy**: 四部件全部预测正确的比例
+- **Anomaly Localization F1**: 异常定位F1（二分类：是否异常）
+
+### 稳定性分层
+
+- **Stable Flag 0/1 Joint Accuracy**: 按稳定性标记分层的严格联合准确率
 
 ### 告警性能
 
 - **Alarm F1**: 异常检测的F1分数
-- **响应时间**: 告警触发的延迟（30秒内/60秒内）
+- **响应时间**: 告警触发的延迟（30秒内/60秒内/漏报数）
 
 ### 鲁棒性测试
 
@@ -222,6 +247,15 @@ python replay.py --cycle 100 --model b1 --speed normal
 - 高斯噪声扰动 (noise_0.05, noise_0.10)
 - 传感器缺失 (mask_FS1, mask_FS1_FS2)
 
+### 性能基准测试
+
+测量指标（同机比较，不做跨机器排名）：
+
+- **特征提取耗时 P50/P95**: 单周期从原始信号提取特征
+- **模型推断耗时 P50/P95**: 单周期预测4个部件
+- **内存峰值**: 特征提取+推断过程的峰值内存
+- **模型文件大小**: 4个部件模型总大小
+
 ## 输出文件
 
 | 文件 | 描述 |
@@ -229,20 +263,17 @@ python replay.py --cycle 100 --model b1 --speed normal
 | `b*_summary.csv` | 各方案的训练/验证/测试集 Macro-F1 汇总 |
 | `predictions_*.csv` | 所有测试样本的预测结果 |
 | `alarms_*.json` | 触发的告警记录 |
-| `metrics.json` | 完整评测指标 |
+| `metrics.json` | 完整评测指标（含稳定性分层） |
 | `robustness_summary.csv` | 鲁棒性测试结果 |
+| `benchmark_results.csv` | 性能基准测试结果 |
+| `figures/cm_*.png` | 混淆矩阵可视化图（20张） |
+| `figures/robustness_*_60s.png` | 鲁棒性测试结果对比图（4张） |
+| `figures/analysis_cycle_*.png` | 单周期错误案例分析图（5张） |
+| `figures/benchmark_*.png` | 性能基准测试图表 |
 
-## 依赖环境
-
-- Python >= 3.10
-- NumPy >= 1.26
-- Pandas >= 2.0
-- scikit-learn >= 1.4
-- joblib >= 1.4
-- matplotlib >= 3.8
 
 ## 参考
 
-- 数据集来源: [UCI Machine Learning Repository - Condition Monitoring of Hydraulic Systems](https://archive.ics.uci.edu/ml/datasets/Condition+monitoring+of+hydraulic+systems)
+- 数据集来源: [UCI Machine Learning Repository - Condition Monitoring of Hydraulic Systems](https://doi.org/10.24432/C5CW21)
 - 算法: RandomForestClassifier (n_estimators=200)
 - 随机种子: 2026
