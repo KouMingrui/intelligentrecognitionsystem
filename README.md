@@ -74,7 +74,7 @@ python prepare.py
 ├── train_b4.py              # 方案B4训练脚本（B0特征+物理交叉特征）
 ├── evaluate.py              # 模型性能评估脚本
 ├── alarm_evaluate.py        # 预测与告警生成脚本
-├── evaluate_robustness.py   # 模型鲁棒性评估脚本
+├── evaluate_robustness.py   # 模型鲁棒性评估脚本（Macro-F1/异常定位/告警）
 ├── replay.py                # 可视化回放脚本
 ├── benchmark.py             # 性能基准测试脚本
 ├── plot_confusion.py        # 混淆矩阵可视化脚本
@@ -195,7 +195,7 @@ python alarm_evaluate.py --model b4
 # 生成完整的评测指标
 python evaluate.py
 
-# 测试模型鲁棒性
+# 测试模型鲁棒性（输出 Macro-F1、异常定位 F1 与告警 F1）
 python evaluate_robustness.py
 
 # 性能基准测试（耗时、内存、模型大小）
@@ -220,6 +220,7 @@ python plot_one_cycle.py
 # 提取所有错误预测案例
 python extract_all_errors.py
 ```
+
 
 ## 评测指标
 
@@ -247,6 +248,8 @@ python extract_all_errors.py
 - 高斯噪声扰动 (noise_0.05, noise_0.10)
 - 传感器缺失 (mask_FS1, mask_FS1_FS2)
 
+在五种条件下分别报告四部件平均与逐部件 Macro-F1，以及异常定位 F1 与告警 F1。其中加噪场景性能衰减温和，传感器缺失（尤其屏蔽 FS1）会使泵的诊断性能大幅下降。
+
 ### 性能基准测试
 
 测量指标（同机比较，不做跨机器排名）：
@@ -264,7 +267,9 @@ python extract_all_errors.py
 | `predictions_*.csv` | 所有测试样本的预测结果 |
 | `alarms_*.json` | 触发的告警记录 |
 | `metrics.json` | 完整评测指标（含稳定性分层） |
-| `robustness_summary.csv` | 鲁棒性测试结果 |
+| `robustness_summary.csv` | 鲁棒性测试结果（逐部件 Macro-F1） |
+| `robustness_localization.csv` | 五种扰动条件下的异常定位 P/R/F1（逐观测预算） |
+| `robustness_alarm.csv` | 五种扰动条件下的告警 P/R/F1 与健康部件误报率 |
 | `benchmark_results.csv` | 性能基准测试结果 |
 | `figures/cm_*.png` | 混淆矩阵可视化图（20张） |
 | `figures/robustness_*_60s.png` | 鲁棒性测试结果对比图（4张） |
